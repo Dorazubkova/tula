@@ -1,3 +1,7 @@
 bokeh==1.1.0
 pandas==0.23.4
 tornado==6.0.1
+scikit-learn==0.21.2
+shapely==1.6.4.post2
+geopandas==0.4.0
+numpy==1.16.2
