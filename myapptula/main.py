@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[35]:
+# In[1]:
 
 
 import bokeh
@@ -30,7 +30,7 @@ import geopandas as gpd
 tile_provider = get_provider(Vendors.CARTODBPOSITRON)
 
 
-# In[36]:
+# In[2]:
 
 
 onoffmatrix = pd.read_csv('myapptula/matrix_Tula_onoff.csv', sep = ';', encoding='cp1251')
@@ -40,7 +40,7 @@ sites_centr = pd.read_csv('myapptula/supers_centr.csv', sep = ';', encoding='cp1
 onoffmatrix = onoffmatrix.groupby(['stop_id_from', 'stop_id_to'])['movements_norm'].sum().reset_index()
 
 
-# In[37]:
+# In[3]:
 
 
 onoffmatrix = pd.merge(onoffmatrix, sites, how = 'inner', left_on = ['stop_id_from'], right_on =
@@ -50,14 +50,14 @@ onoffmatrix = pd.merge(onoffmatrix, sites, how = 'inner', left_on = ['stop_id_to
 onoffmatrix = onoffmatrix[['site_id_from', 'site_id_to', 'movements_norm']]
 
 
-# In[38]:
+# In[4]:
 
 
 onoffmatrix = onoffmatrix.groupby(['site_id_from','site_id_to']).sum().reset_index()
 onoffmatrix['movements_norm'].sum()
 
 
-# In[39]:
+# In[5]:
 
 
 onoffmatrix = pd.merge(onoffmatrix, sites_centr, left_on = ['site_id_from'], right_on = ['super_site_id']).rename(columns =
@@ -70,13 +70,13 @@ onoffmatrix = onoffmatrix[onoffmatrix['movements_norm']>0.5]
 onoffmatrix.head()
 
 
-# In[40]:
+# In[6]:
 
 
 sites_supers = pd.read_csv('myapptula/sites_supers.csv', sep = ';', encoding='cp1251')
 
 
-# In[41]:
+# In[7]:
 
 
 odmatrix = pd.merge(odmatrix, sites_supers, how = 'inner', left_on = ['start_site_id'], right_on =['site_id']).rename(columns = {'super_site_id':'site_id_from'})
@@ -84,14 +84,14 @@ odmatrix = pd.merge(odmatrix, sites_supers, how = 'inner', left_on = ['end_site_
 odmatrix = odmatrix[['site_id_from', 'site_id_to', 'value']].rename(columns = {'value' : 'movements_norm'})
 
 
-# In[42]:
+# In[8]:
 
 
 odmatrix = odmatrix.groupby(['site_id_from','site_id_to'])['movements_norm'].sum().reset_index()
-odmatrix = odmatrix[odmatrix['movements_norm']>0.5]
+# odmatrix = odmatrix[odmatrix['movements_norm']>0.5]
 
 
-# In[43]:
+# In[9]:
 
 
 odmatrix = pd.merge(odmatrix, sites_centr, left_on = ['site_id_from'], right_on = ['super_site_id']).rename(columns =
@@ -103,7 +103,13 @@ odmatrix['movements_norm'] = round(odmatrix['movements_norm'], 2)
 odmatrix.head()
 
 
-# In[44]:
+# In[10]:
+
+
+pd.DataFrame.to_csv(odmatrix, 'C:/Users/Zubkova_DD/Desktop/odmatrix.csv', sep=';', index=False, encoding = 'cp1251')
+
+
+# In[11]:
 
 
 cds = dict(
@@ -125,7 +131,7 @@ source_from2 = ColumnDataSource(data = cds)
 source_to2 = ColumnDataSource(data = cds)
 
 
-# In[45]:
+# In[12]:
 
 
 lasso_from = LassoSelectTool(select_every_mousemove=False)
@@ -141,7 +147,7 @@ toolList_from2 = [lasso_from2, 'reset', 'pan','wheel_zoom']
 toolList_to2 = [lasso_to2,  'reset',  'pan','wheel_zoom']
 
 
-# In[46]:
+# In[13]:
 
 
 p = figure(x_range=(4155911, 4206523), y_range=(7185880, 7226515), x_axis_type="mercator", y_axis_type="mercator",
@@ -169,7 +175,8 @@ p.add_layout(Time_Title1, 'above')
 
 t = p_to.circle(x = 'X_to', y = 'Y_to', fill_color='papayawhip', fill_alpha = 0.6, 
                 line_color='tan', line_alpha = 0.8, size=6 , source = source_to,
-                   nonselection_fill_alpha = 0.6, nonselection_fill_color = 'papayawhip', nonselection_line_color = None)
+                   nonselection_fill_alpha = 0.6, nonselection_fill_color = 'papayawhip', nonselection_line_color = 'tan',
+               nonselection_line_alpha = 0.8)
 
 
 ds = r.data_source
@@ -210,7 +217,8 @@ Time_Title2 = Title(text='Матрица: ', text_font_size='10pt', text_color =
 p2.add_layout(Time_Title2, 'above')
 t2 = p_from.circle(x = 'X_from', y = 'Y_from', fill_color='papayawhip', fill_alpha = 0.6, 
                     line_color='tan', line_alpha = 0.8, size=6 , source = source_from2,
-                  nonselection_fill_alpha = 0.6, nonselection_fill_color = 'papayawhip', nonselection_line_color = None)
+                  nonselection_fill_alpha = 0.6, nonselection_fill_color = 'papayawhip', nonselection_line_color = 'tan',
+                  nonselection_line_alpha = 0.8)
 
 t_from = p_from.circle(x = [], y = [], fill_color=[], fill_alpha = 0.6, 
                                 line_color= None, line_alpha = 0.8, size=[], nonselection_line_color = None, 
@@ -226,7 +234,7 @@ ds2 = r2.data_source
 tds2 = t2.data_source
 
 
-# In[47]:
+# In[14]:
 
 
 #widgets
@@ -240,7 +248,7 @@ button1 = RadioButtonGroup(labels=['Нарисовать корреспонде�
 button2 = RadioButtonGroup(labels=['Нарисовать корреспонденции','Написать корреспонденции'], button_type  = 'primary')
 
 
-# In[48]:
+# In[15]:
 
 
 prev_matrix_from = ['matrix']
@@ -249,7 +257,7 @@ def previous_matrix_from(matrix):
     return prev_matrix_from
 
 
-# In[49]:
+# In[16]:
 
 
 def update1(attrname, old, new):
@@ -293,7 +301,7 @@ def update1(attrname, old, new):
 select1.on_change('value', update1)
 
 
-# In[50]:
+# In[17]:
 
 
 prev_matrix_to = ['matrix']
@@ -302,7 +310,7 @@ def previous_matrix_to(matrix):
     return prev_matrix_to
 
 
-# In[51]:
+# In[18]:
 
 
 def update2(attrname, old, new):
@@ -342,7 +350,7 @@ def update2(attrname, old, new):
 select2.on_change('value', update2)
 
 
-# In[52]:
+# In[19]:
 
 
 dd_to = [600000]
@@ -351,7 +359,7 @@ def previous_to(d):
     return dd_to 
 
 
-# In[53]:
+# In[20]:
 
 
 dd_from = [600000]
@@ -360,7 +368,7 @@ def previous_from(d):
     return dd_from   
 
 
-# In[54]:
+# In[21]:
 
 
 index_to = [[0]]
@@ -369,7 +377,7 @@ def previous_idx_to(idx):
     return index_to
 
 
-# In[55]:
+# In[22]:
 
 
 index_from = [[0]]
@@ -378,7 +386,7 @@ def previous_idx_from(idx):
     return index_from
 
 
-# In[56]:
+# In[23]:
 
 
 bttn = [2]
@@ -387,7 +395,7 @@ def previous_but(but):
     return bttn
 
 
-# In[57]:
+# In[24]:
 
 
 def zoom_groups(x):
@@ -402,7 +410,7 @@ def zoom_groups(x):
     return group 
 
 
-# In[58]:
+# In[25]:
 
 
 def cluster_to(test, X, n, color):
@@ -444,7 +452,7 @@ def cluster_to(test, X, n, color):
     return new_data1, new_data_text1
 
 
-# In[59]:
+# In[26]:
 
 
 def cluster_from(test, X, n, color):
@@ -486,7 +494,7 @@ def cluster_from(test, X, n, color):
     return new_data1, new_data_text1
 
 
-# In[60]:
+# In[27]:
 
 
 def clear():
@@ -504,7 +512,7 @@ def clear():
     return new_data1, new_data_text1
 
 
-# In[61]:
+# In[28]:
 
 
 def null_selection_to():
@@ -520,7 +528,7 @@ def null_selection_from2():
     source_from2.selected.update(indices=[])
 
 
-# In[62]:
+# In[29]:
 
 
 def callback(attrname, old, new): 
@@ -624,7 +632,7 @@ button1.on_change('active', callback)
 p_to.x_range.on_change('start', callback) 
 
 
-# In[63]:
+# In[30]:
 
 
 def callback2(attrname, old, new):
@@ -729,7 +737,7 @@ button2.on_change('active', callback2)
 p_from.x_range.on_change('start', callback2)  
 
 
-# In[64]:
+# In[31]:
 
 
 def callback_to(attrname, old, new):
@@ -788,7 +796,7 @@ source_to.selected.on_change('indices', callback_to)
 source_from.selected.on_change('indices', callback_to)
 
 
-# In[65]:
+# In[32]:
 
 
 def update_selection_from2(idx2):
@@ -854,7 +862,7 @@ source_to2.selected.on_change('indices', callback_to2)
 button2.on_change('active', callback_to2)
 
 
-# In[66]:
+# In[33]:
 
 
 layout1 = layout.row(p, p_to)
@@ -866,7 +874,7 @@ layout5 = layout.row(layout1, layout3)
 layout6 = layout.row(layout2, layout4)
 
 
-# In[67]:
+# In[34]:
 
 
 tab1 = Panel(child=layout5, title='Фильтр корреспонденций "ИЗ"')
