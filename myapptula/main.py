@@ -88,7 +88,7 @@ odmatrix = odmatrix[['site_id_from', 'site_id_to', 'value']].rename(columns = {'
 
 
 odmatrix = odmatrix.groupby(['site_id_from','site_id_to'])['movements_norm'].sum().reset_index()
-# odmatrix = odmatrix[odmatrix['movements_norm']>0.5]
+odmatrix = odmatrix[odmatrix['movements_norm']>0.5]
 
 
 # In[9]:
@@ -102,14 +102,6 @@ odmatrix = odmatrix[['site_id_from', 'site_id_to', 'movements_norm', 'X_from', '
 odmatrix['movements_norm'] = round(odmatrix['movements_norm'], 2)
 odmatrix.head()
 
-
-# In[10]:
-
-
-pd.DataFrame.to_csv(odmatrix, 'C:/Users/Zubkova_DD/Desktop/odmatrix.csv', sep=';', index=False, encoding = 'cp1251')
-
-
-# In[11]:
 
 
 cds = dict(
