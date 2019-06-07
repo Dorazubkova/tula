@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[107]:
+# In[35]:
 
 
 import bokeh
@@ -30,38 +30,80 @@ import geopandas as gpd
 tile_provider = get_provider(Vendors.CARTODBPOSITRON)
 
 
-# In[108]:
+# In[36]:
 
 
 onoffmatrix = pd.read_csv('myapptula/matrix_Tula_onoff.csv', sep = ';', encoding='cp1251')
-sites = pd.read_csv('myapptula/sites.csv', sep = ';', encoding='cp1251')
-sites_centr = pd.read_csv('myapptula/sites_centr.csv', sep = ';', encoding='cp1251')
+odmatrix = pd.read_csv('myapptula/new_matrix_site_id_x_y_z.csv', sep = ';', encoding='cp1251')
+sites = pd.read_csv('myapptula/supers.csv', sep = ';', encoding='cp1251')
+sites_centr = pd.read_csv('myapptula/supers_centr.csv', sep = ';', encoding='cp1251')
+onoffmatrix = onoffmatrix.groupby(['stop_id_from', 'stop_id_to'])['movements_norm'].sum().reset_index()
 
 
-# In[109]:
+# In[37]:
 
 
 onoffmatrix = pd.merge(onoffmatrix, sites, how = 'inner', left_on = ['stop_id_from'], right_on =
-                       ['stop_id']).rename(columns = {'site_id' : 'site_id_from'})
+                       ['stop_id']).rename(columns = {'super_site_id' : 'site_id_from'})
 onoffmatrix = pd.merge(onoffmatrix, sites, how = 'inner', left_on = ['stop_id_to'], right_on =
-                       ['stop_id']).rename(columns = {'site_id' : 'site_id_to'})
+                       ['stop_id']).rename(columns = {'super_site_id' : 'site_id_to'})
 onoffmatrix = onoffmatrix[['site_id_from', 'site_id_to', 'movements_norm']]
+
+
+# In[38]:
+
+
 onoffmatrix = onoffmatrix.groupby(['site_id_from','site_id_to']).sum().reset_index()
+onoffmatrix['movements_norm'].sum()
 
 
-# In[110]:
+# In[39]:
 
 
-onoffmatrix = pd.merge(onoffmatrix, sites_centr, left_on = ['site_id_from'], right_on = ['site_id']).rename(columns =
+onoffmatrix = pd.merge(onoffmatrix, sites_centr, left_on = ['site_id_from'], right_on = ['super_site_id']).rename(columns =
                     {'X':'X_from', 'Y':'Y_from'})
-onoffmatrix = pd.merge(onoffmatrix, sites_centr, left_on = ['site_id_to'], right_on = ['site_id']).rename(columns =
+onoffmatrix = pd.merge(onoffmatrix, sites_centr, left_on = ['site_id_to'], right_on = ['super_site_id']).rename(columns =
                     {'X':'X_to', 'Y':'Y_to'})
 onoffmatrix = onoffmatrix[['site_id_from', 'site_id_to', 'movements_norm', 'X_from', 'Y_from', 'X_to', 'Y_to']]
 onoffmatrix['movements_norm'] = round(onoffmatrix['movements_norm'], 2)
+onoffmatrix = onoffmatrix[onoffmatrix['movements_norm']>0.5]
 onoffmatrix.head()
 
 
-# In[111]:
+# In[40]:
+
+
+sites_supers = pd.read_csv('myapptula/sites_supers.csv', sep = ';', encoding='cp1251')
+
+
+# In[41]:
+
+
+odmatrix = pd.merge(odmatrix, sites_supers, how = 'inner', left_on = ['start_site_id'], right_on =['site_id']).rename(columns = {'super_site_id':'site_id_from'})
+odmatrix = pd.merge(odmatrix, sites_supers, how = 'inner', left_on = ['end_site_id'], right_on =['site_id']).rename(columns = {'super_site_id' : 'site_id_to'})
+odmatrix = odmatrix[['site_id_from', 'site_id_to', 'value']].rename(columns = {'value' : 'movements_norm'})
+
+
+# In[42]:
+
+
+odmatrix = odmatrix.groupby(['site_id_from','site_id_to'])['movements_norm'].sum().reset_index()
+odmatrix = odmatrix[odmatrix['movements_norm']>0.5]
+
+
+# In[43]:
+
+
+odmatrix = pd.merge(odmatrix, sites_centr, left_on = ['site_id_from'], right_on = ['super_site_id']).rename(columns =
+                    {'X':'X_from', 'Y':'Y_from'})
+odmatrix = pd.merge(odmatrix, sites_centr, left_on = ['site_id_to'], right_on = ['super_site_id']).rename(columns =
+                    {'X':'X_to', 'Y':'Y_to'})
+odmatrix = odmatrix[['site_id_from', 'site_id_to', 'movements_norm', 'X_from', 'Y_from', 'X_to', 'Y_to']]
+odmatrix['movements_norm'] = round(odmatrix['movements_norm'], 2)
+odmatrix.head()
+
+
+# In[44]:
 
 
 cds = dict(
@@ -83,7 +125,7 @@ source_from2 = ColumnDataSource(data = cds)
 source_to2 = ColumnDataSource(data = cds)
 
 
-# In[112]:
+# In[45]:
 
 
 lasso_from = LassoSelectTool(select_every_mousemove=False)
@@ -99,10 +141,11 @@ toolList_from2 = [lasso_from2, 'reset', 'pan','wheel_zoom']
 toolList_to2 = [lasso_to2,  'reset',  'pan','wheel_zoom']
 
 
-# In[113]:
+# In[46]:
 
 
-p = figure(x_range=(4155911, 4172765), y_range=(7185880, 7220081), x_axis_type="mercator", y_axis_type="mercator", tools=toolList_from)
+p = figure(x_range=(4155911, 4206523), y_range=(7185880, 7226515), x_axis_type="mercator", y_axis_type="mercator",
+           tools=toolList_from)
 p.add_tile(tile_provider)
 
 
@@ -117,7 +160,8 @@ r = p.circle(x = 'X_from',
         nonselection_fill_alpha=1,
         nonselection_fill_color='gray')
 
-p_to = figure(x_range=(4155911, 4172765), y_range=(7185880, 7220081), x_axis_type="mercator", y_axis_type="mercator", tools=toolList_to)
+p_to = figure(x_range=(4155911, 4206523), y_range=(7185880, 7226515), x_axis_type="mercator", y_axis_type="mercator",
+              tools=toolList_to)
 p_to.add_tile(tile_provider)
 
 Time_Title1 = Title(text='Матрица: ', text_font_size='10pt', text_color = 'grey')
@@ -142,7 +186,8 @@ l = p_to.text(x = [], y = [], text_color='black', text =[], text_font_size='8pt'
 tds_to = t_to.data_source
 lds=l.data_source
 
-p2 = figure(x_range=(4155911, 4172765), y_range=(7185880, 7220081), x_axis_type="mercator", y_axis_type="mercator", tools=toolList_from2)
+p2 = figure(x_range=(4155911, 4206523), y_range=(7185880, 7226515), x_axis_type="mercator", 
+                     y_axis_type="mercator", tools=toolList_from2)
 p2.add_tile(tile_provider)
 
 # p2.add_layout(Title(text='Фильтр корреспонденций "В"', text_font_size='10pt', text_color = 'purple'), 'above')
@@ -158,7 +203,7 @@ r2 = p2.circle(x = 'X_to',
         nonselection_fill_color='gray')
 
 
-p_from = figure(x_range=(4155911, 4172765), y_range=(7185880, 7220081), x_axis_type="mercator", y_axis_type="mercator", tools=toolList_to2)
+p_from = figure(x_range=(4155911, 4206523), y_range=(7185880, 7226515), x_axis_type="mercator", y_axis_type="mercator", tools=toolList_to2)
 p_from.add_tile(tile_provider)
 
 Time_Title2 = Title(text='Матрица: ', text_font_size='10pt', text_color = 'grey')
@@ -181,7 +226,7 @@ ds2 = r2.data_source
 tds2 = t2.data_source
 
 
-# In[114]:
+# In[47]:
 
 
 #widgets
@@ -195,7 +240,7 @@ button1 = RadioButtonGroup(labels=['Нарисовать корреспонде�
 button2 = RadioButtonGroup(labels=['Нарисовать корреспонденции','Написать корреспонденции'], button_type  = 'primary')
 
 
-# In[115]:
+# In[48]:
 
 
 prev_matrix_from = ['matrix']
@@ -204,7 +249,7 @@ def previous_matrix_from(matrix):
     return prev_matrix_from
 
 
-# In[116]:
+# In[49]:
 
 
 def update1(attrname, old, new):
@@ -248,7 +293,7 @@ def update1(attrname, old, new):
 select1.on_change('value', update1)
 
 
-# In[117]:
+# In[50]:
 
 
 prev_matrix_to = ['matrix']
@@ -257,7 +302,7 @@ def previous_matrix_to(matrix):
     return prev_matrix_to
 
 
-# In[118]:
+# In[51]:
 
 
 def update2(attrname, old, new):
@@ -297,7 +342,7 @@ def update2(attrname, old, new):
 select2.on_change('value', update2)
 
 
-# In[119]:
+# In[52]:
 
 
 dd_to = [600000]
@@ -306,7 +351,7 @@ def previous_to(d):
     return dd_to 
 
 
-# In[120]:
+# In[53]:
 
 
 dd_from = [600000]
@@ -315,7 +360,7 @@ def previous_from(d):
     return dd_from   
 
 
-# In[121]:
+# In[54]:
 
 
 index_to = [[0]]
@@ -324,7 +369,7 @@ def previous_idx_to(idx):
     return index_to
 
 
-# In[122]:
+# In[55]:
 
 
 index_from = [[0]]
@@ -333,7 +378,7 @@ def previous_idx_from(idx):
     return index_from
 
 
-# In[123]:
+# In[56]:
 
 
 bttn = [2]
@@ -342,7 +387,7 @@ def previous_but(but):
     return bttn
 
 
-# In[124]:
+# In[57]:
 
 
 def zoom_groups(x):
@@ -357,7 +402,7 @@ def zoom_groups(x):
     return group 
 
 
-# In[125]:
+# In[58]:
 
 
 def cluster_to(test, X, n, color):
@@ -399,7 +444,7 @@ def cluster_to(test, X, n, color):
     return new_data1, new_data_text1
 
 
-# In[126]:
+# In[59]:
 
 
 def cluster_from(test, X, n, color):
@@ -441,7 +486,7 @@ def cluster_from(test, X, n, color):
     return new_data1, new_data_text1
 
 
-# In[127]:
+# In[60]:
 
 
 def clear():
@@ -459,7 +504,7 @@ def clear():
     return new_data1, new_data_text1
 
 
-# In[128]:
+# In[61]:
 
 
 def null_selection_to():
@@ -475,7 +520,7 @@ def null_selection_from2():
     source_from2.selected.update(indices=[])
 
 
-# In[129]:
+# In[62]:
 
 
 def callback(attrname, old, new): 
@@ -579,7 +624,7 @@ button1.on_change('active', callback)
 p_to.x_range.on_change('start', callback) 
 
 
-# In[130]:
+# In[63]:
 
 
 def callback2(attrname, old, new):
@@ -684,7 +729,7 @@ button2.on_change('active', callback2)
 p_from.x_range.on_change('start', callback2)  
 
 
-# In[131]:
+# In[64]:
 
 
 def callback_to(attrname, old, new):
@@ -743,7 +788,7 @@ source_to.selected.on_change('indices', callback_to)
 source_from.selected.on_change('indices', callback_to)
 
 
-# In[132]:
+# In[65]:
 
 
 def update_selection_from2(idx2):
@@ -809,7 +854,7 @@ source_to2.selected.on_change('indices', callback_to2)
 button2.on_change('active', callback_to2)
 
 
-# In[133]:
+# In[66]:
 
 
 layout1 = layout.row(p, p_to)
@@ -821,7 +866,7 @@ layout5 = layout.row(layout1, layout3)
 layout6 = layout.row(layout2, layout4)
 
 
-# In[134]:
+# In[67]:
 
 
 tab1 = Panel(child=layout5, title='Фильтр корреспонденций "ИЗ"')
