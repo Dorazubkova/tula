@@ -79,7 +79,7 @@ onoffmatrix.head()
 # In[49]:
 
 
-pd.DataFrame.to_csv(onoffmatrix, 'C:/Users/Zubkova_DD/Desktop/onoffmatrix_supers.csv', sep=';', index=False, encoding = 'cp1251')
+# pd.DataFrame.to_csv(onoffmatrix, 'C:/Users/Zubkova_DD/Desktop/onoffmatrix_supers.csv', sep=';', index=False, encoding = 'cp1251')
 
 
 # In[50]:
@@ -118,7 +118,7 @@ odmatrix.head()
 # In[54]:
 
 
-pd.DataFrame.to_csv(odmatrix, 'C:/Users/Zubkova_DD/Desktop/odmatrix_supers.csv', sep=';', index=False, encoding = 'cp1251')
+# pd.DataFrame.to_csv(odmatrix, 'C:/Users/Zubkova_DD/Desktop/odmatrix_supers.csv', sep=';', index=False, encoding = 'cp1251')
 
 
 # In[55]:
